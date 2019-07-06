@@ -20,8 +20,8 @@ class Network(nn.Module):
         super(Network, self).__init__()
         self.input_size = input_size
         self.nb_action = nb_action
-        self.fc1 = nn.Linear(input_size, 30)
-        self.fc2 = nn.Linear(30, nb_action)
+        self.fc1 = nn.Linear(input_size, 30) # connects all nodes of the input layer to all nodes of the hidden layer
+        self.fc2 = nn.Linear(30, nb_action) # connects all nodes of the hidden layer to all nodes of the output layer
     
     def forward(self, state):
         x = F.relu(self.fc1(state))
