@@ -24,8 +24,8 @@ class Network(nn.Module):
         self.fc2 = nn.Linear(30, nb_action) # connects all nodes of the hidden layer to all nodes of the output layer
     
     def forward(self, state):
-        x = F.relu(self.fc1(state))
-        q_values = self.fc2(x)
+        x = F.relu(self.fc1(state)) # x = hidden neurons
+        q_values = self.fc2(x) # q_values = output neurons
         return q_values
 
 # Implementing Experience Replay
@@ -35,14 +35,21 @@ class ReplayMemory(object):
     def __init__(self, capacity):
         self.capacity = capacity
         self.memory = []
-    
+
+    # event is a tuple of 4
+    # 1. old state
+    # 2. new state
+    # 3. action
+    # 4. reward
     def push(self, event):
         self.memory.append(event)
         if len(self.memory) > self.capacity:
             del self.memory[0]
     
     def sample(self, batch_size):
+        # by using zip*, we get one list of states, one list of actions, etc.
         samples = zip(*random.sample(self.memory, batch_size))
+        # map samples into a torch variable which contains a tensor and a gradient
         return map(lambda x: Variable(torch.cat(x, 0)), samples)
 
 # Implementing Deep Q Learning
