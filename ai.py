@@ -15,7 +15,8 @@ from torch.autograd import Variable
 # Creating the architecture of the Neural Network
 
 class Network(nn.Module):
-    
+
+    #nb_action = number of actions (i think)
     def __init__(self, input_size, nb_action):
         super(Network, self).__init__()
         self.input_size = input_size
@@ -53,24 +54,31 @@ class ReplayMemory(object):
         return map(lambda x: Variable(torch.cat(x, 0)), samples)
 
 # Implementing Deep Q Learning
-
+# I think this is the "public" class that's used by the rest of the program
+#DeepQNetwork
 class Dqn():
     
     def __init__(self, input_size, nb_action, gamma):
         self.gamma = gamma
+        # sliding window of mean of the last 100 rewards
         self.reward_window = []
         self.model = Network(input_size, nb_action)
         self.memory = ReplayMemory(100000)
+        # optimizer is used for SGD (i think)
         self.optimizer = optim.Adam(self.model.parameters(), lr = 0.001)
         self.last_state = torch.Tensor(input_size).unsqueeze(0)
         self.last_action = 0
         self.last_reward = 0
-    
+
+    # state = input state
     def select_action(self, state):
-        probs = F.softmax(self.model(Variable(state, volatile = True))*100) # T=100
-        action = probs.multinomial()
+        # T = Temperature, I think it accelerates the learning
+        probs = F.softmax(self.model(Variable(state, volatile = True))*100) # T=100, I think this gives us the Q values
+        action = probs.multinomial() # "random draw" of the Q values
         return action.data[0,0]
-    
+
+    # learns based on a batch of transitions that have already happened
+    # thanks to ReplayMemory.sample, our transitions are in 4 batches: one for state, etc.
     def learn(self, batch_state, batch_next_state, batch_reward, batch_action):
         outputs = self.model(batch_state).gather(1, batch_action.unsqueeze(1)).squeeze(1)
         next_outputs = self.model(batch_next_state).detach().max(1)[0]
